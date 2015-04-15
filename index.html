@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+ <head>
+ 	<title>ScenePT Demoilta#11: 2 Maio 2015</title>
+ 	<meta charset='utf-8'>
+ 	<style>
+ 	@import url(http://fonts.googleapis.com/css?family=Montserrat:700);
+ 	
+ 	@font-face {
+		font-family: 'Monserrat', sans-serif;
+/*		src: url('Neuropol.ttf') format('truetype');
+		font-weight: normal;
+		font-style: normal;*/
+	}
+	
+	* {
+		margin: 0px;
+		padding: 0px;
+		overflow: hidden;
+	}
+	
+	body {
+		background: black;
+	}
+	
+ 	.aligncenter {
+ 		position: absolute;
+ 		top: 0px;
+ 		width: 100%;
+ 		text-align: center;
+ 		margin: auto;
+ 	}
+/*	
+	#message {
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		font-family: 'Neuropol';
+		color: #fff;
+		width: 100%;
+		height: 100%;
+		margin: auto;
+		text-align: center;
+		font-size: 2em;
+		overflow-y: hidden;
+		text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+		line-height: 2em;
+		z-index: 21;
+	}
+	
+	#message span {
+		position: relative;
+		top: 35%;
+		transform: translateY(-50%);
+		font-size:2em;
+	}
+	
+	#message_console {
+		position: absolute;
+		bottom: 0px;
+		left: 0px;
+		font-family: 'Neuropol';
+		color: #fff;
+		width: 100%;
+		margin: auto;
+		text-align: left;
+		font-size: 1.5em;
+		overflow-y: hidden;
+		text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+		line-height: 1.5em;
+		z-index: 21;
+		padding-left: 10px;
+	}
+*/
+ 	</style>
+	<script src="requestanimationframe.js"></script>
+  	<script type="application/javascript">
+
+rand = function(n){
+	return Math.floor(Math.random()*n);
+};
+
+var rms = 1.0;
+var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
+var is_safari = navigator.userAgent.indexOf("Safari") > -1;
+if ((is_chrome)&&(is_safari)) {is_safari=false;}
+
+function init() {
+	try {
+		// Fix up for prefixing
+		window.AudioContext = window.AudioContext||window.webkitAudioContext;
+		audioContext = new AudioContext();
+		var request = new XMLHttpRequest();
+		if (is_safari) request.open('GET', 'intro.m4a', true);
+		else request.open('GET', 'intro.ogg', true);
+		request.responseType = 'arraybuffer';
+		console.log('requesting');
+		// Decode asynchronously
+		request.onload = function() {
+			decode(request.response);
+		}
+		request.send();
+	} catch(e) {
+		console.log('Web Audio API is not supported in this browser');
+		drawCanvas();
+	}
+}
+var levelChecker;
+var decode = function(response) {
+	audioContext.decodeAudioData(response, function(buffer) {
+		backgroundAudio = audioContext.createBufferSource(); // creates a sound source
+		backgroundAudio.buffer = buffer; // tell the source which sound to play
+		backgroundAudio.connect(audioContext.destination); // connect the source to the context's destination (the speakers)
+		backgroundAudio.loop = true;
+		backgroundAudio.start(0);
+		levelChecker = audioContext.createScriptProcessor(2048, 1, 2);
+		backgroundAudio.connect(levelChecker);
+		levelChecker.connect(audioContext.destination);
+		levelChecker.onaudioprocess = process;
+		console.log('audio playing');
+		// start canvas
+		drawCanvas();
+	}, function(evt) {
+		console.log('failed to load buffer');
+		console.log(evt);
+		drawCanvas();
+	});
+}
+var process = function(e) {
+	var buffer = e.inputBuffer.getChannelData(0);
+	var len = buffer.length;
+	var total = 0;
+	var i = 0;
+	while ( i < len ) total += Math.abs( buffer[i++] );
+	rms = (rms + Math.sqrt( total / len )) * 0.5;
+	//console.log(rms);
+}
+
+var w;
+var h;
+var ctx;
+
+map = function(value, istart, istop, ostart, ostop) {
+    return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+};
+
+function drawCanvas() {
+
+	resize();
+	//loadLine('','');
+
+	var num = 10;
+	/*var angle = (Math.PI*2)/num;
+	var size = 10;
+	var opening, phase1, phase2;
+	var pad = 25;
+	var thissize = 100;*/
+	
+	var cube = [];
+
+	for(var i=0; i<num; i++) {
+		cube[i] = Cube(w*0.5, h*0.5);
+	}
+	
+	console.log(cube);
+	
+	function drawThis() {
+		
+		//fill(0, noise(frameCount*0.01)*128);
+		//noStroke();
+		//rect(0, 0, width, height);
+		
+		//console.log(cube);
+		//for(var i=0; i<num; i++) {
+		//	cube[i].init();
+		//}
+
+		var d2 = new Date();
+		var n2 = d2.getTime(); 
+		var fader = 0;
+
+		if ((n2-n) <= 3000) {
+		//if(millis() <= 30000) {
+			fader = map((n2-n), 30000, 0, 0.0, 1.0);
+		//} else if (millis() >= 90000) {
+		} else if ((n2-n) >= 90000) {
+			fader = map((n2-n), 90000, 120000, 0.0, 1.0);
+		}
+		
+		var frameCount = Math.floor((n2-n)*50);
+		
+		ctx.save();
+		var rotX = map(noise(frameCount*0.001)*100, 0, 100, -90, 90);
+		var rotY = map(noise(frameCount*0.002)*100, 0, 100, -90, 90);
+		ctx.translate(w*0.5, h*0.5);
+		//textFont(font);
+		//textSize(48);
+		//textAlign(CENTER);
+		ctx.font="48px Monserrat";
+		//fill(noise(frameCount*0.2)*256, noise(frameCount*0.1)*256);
+		var gray = noise(frameCount*0.2)*256;
+		ctx.fillStyle = "rgba("+gray+","+gray+","+gray+","+noise(frameCount*0.1)+")";
+		//rotateX(radians(rotX));
+		//rotateY(radians(rotY));
+		ctx.transform(1,rotX,rotY,1,0,0);
+		//text(words[(millis()/1000)%words.length].toUpperCase(), 0, 0);
+		ctx.fillText(words[Math.floor((n2-n)/1000)%words.length].toUpperCase(),0,0);
+		//popMatrix();
+		ctx.restore();
+	
+//TODO: PORT LETTERS
+		/*pushMatrix();
+		float rotX = map(noise(frameCount*0.001)*100, 0, 100, -90, 90);
+		float rotY = map(noise(frameCount*0.002)*100, 0, 100, -90, 90);
+		translate(width/2, height/2);
+		textFont(font);
+		textSize(48);
+		textAlign(CENTER);
+		fill(noise(frameCount*0.2)*256, noise(frameCount*0.1)*256);
+		rotateX(radians(rotX));
+		rotateY(radians(rotY));
+		text(words[(millis()/1000)%words.length].toUpperCase(), 0, 0);
+		popMatrix();*/
+
+		//fill(255, fader);
+		//rect(0, 0, width, height);
+		ctx.fillStyle = "rgba(255,255,255,"+fader+")";
+		ctx.fillRect(0,0,w,h);
+		
+		/*phase1 = timer/25000;
+		phase2 = timer/2500;
+		phase3 = timer/100;
+
+		ctx.fillStyle = "rgba(255,182,200,0.5)";
+		ctx.fillRect(0,0,w,h);
+		
+		var gray = parseInt((255-rms*100),10);
+		ctx.fillStyle = "rgba(250,250,250,0.1)";
+		var sizex = thissize;
+		var sizey = thissize*rms;
+		for (var thisx=0; thisx<w; thisx += sizex*2 ) {
+			for (var thisy=0; thisy<h; thisy += sizey*2 ) {
+				var posX = w - ((timer + thisx*.5 - sizex*Math.sin(thisy)) % (w + thissize));
+				var posY = h*.41 + Math.sin(phase2)*rms*10 - Math.cos(phase3 + thisx)*h*.5;
+				ctx.save();
+				ctx.translate( posX, parseInt(posY,10) );
+				ctx.beginPath();
+				ctx.moveTo(-sizex,-sizey);
+				ctx.lineTo(-sizex,sizey);
+				ctx.lineTo(sizex,sizey);
+				ctx.lineTo(sizex,-sizey);
+				ctx.closePath();
+				ctx.fill();
+				ctx.restore();
+			}
+		}	*/
+		
+	}
+	
+	requestAnimationFrame( animate );
+	
+	var d = new Date();
+	var n = d.getTime();
+
+	function animate() {
+		requestAnimationFrame( animate );
+		drawThis();
+	}
+}
+
+
+function Cube(x,y) {
+ 	this._x = x;
+    this._y = y;
+    this._rotX = Math.random();
+    this._rotY = Math.random();
+    this._strokeAlpha = Math.random();
+};
+
+Cube.prototype = {
+	init: {
+	
+//TODO: PORT CUBE
+		/*pushMatrix();
+		translate(_x, _y, -100);
+		rotateX(radians(frameCount * _rotX));
+		rotateY(radians(frameCount * _rotY));
+		noFill();
+		stroke(255, _strokeAlpha);
+		strokeWeight(.5);
+		box(width/1.5);
+		popMatrix();*/
+	  }
+};
+
+window.onresize = resize;
+
+function resize() {
+	w = window.innerWidth;
+	h = window.innerHeight;
+	
+	var canvas = document.getElementById("canvas");
+	canvas.setAttribute("width", w);
+	canvas.setAttribute("height", h);
+	
+	ctx = canvas.getContext("2d");
+	ctx.width = w;
+	ctx.height = h;
+}
+
+/*function loadLine(thisclass, thistext) {
+var content = '';
+content += '<span class="'+thisclass+'">'+thistext+'</span><br />';
+document.getElementById('message').innerHTML = content;
+}*/
+
+var words = [
+"Scenept",
+"Demoilta#11",
+"2 de Maio 2015",
+"16h",
+"ArticaCC",
+"Campus FCT",
+"Monte da Caparica",
+"Entrada 1 Super Bock",
+"Fuckings to Lamers"
+];
+
+
+// Noise functions and helpers
+function PerlinNoise(seed) {
+	var rnd = seed !== undefined ? 0 : rand(256);
+	var i, j;
+	// http://www.noisemachine.com/talk1/17b.html
+	// http://mrl.nyu.edu/~perlin/noise/
+	// generate permutation
+	var perm = new Uint8Array(512);
+	for(i=0;i<256;++i) { perm[i] = i; }
+	for(i=0;i<256;++i) { var t = perm[j = rand(2) & 0xFF]; perm[j] = perm[i]; perm[i] = t; }
+	// copy to avoid taking mod in perm[0];
+	for(i=0;i<256;++i) { perm[i + 256] = perm[i]; }
+
+	function grad3d(i,x,y,z) {
+	  var h = i & 15; // convert into 12 gradient directions
+	  var u = h<8 ? x : y,
+		  v = h<4 ? y : h===12||h===14 ? x : z;
+	  return ((h&1) === 0 ? u : -u) + ((h&2) === 0 ? v : -v);
+	}
+
+	function grad2d(i,x,y) {
+	  var v = (i & 1) === 0 ? x : y;
+	  return (i&2) === 0 ? -v : v;
+	}
+
+	function grad1d(i,x) {
+	  return (i&1) === 0 ? -x : x;
+	}
+
+	function lerp(t,a,b) { return a + t * (b - a); }
+
+	this.noise3d = function(x, y, z) {
+	  var X = Math.floor(x)&255, Y = Math.floor(y)&255, Z = Math.floor(z)&255;
+	  x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+	  var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y, fz = (3-2*z)*z*z;
+	  var p0 = perm[X]+Y, p00 = perm[p0] + Z, p01 = perm[p0 + 1] + Z,
+		  p1 = perm[X + 1] + Y, p10 = perm[p1] + Z, p11 = perm[p1 + 1] + Z;
+	  return lerp(fz,
+		lerp(fy, lerp(fx, grad3d(perm[p00], x, y, z), grad3d(perm[p10], x-1, y, z)),
+				 lerp(fx, grad3d(perm[p01], x, y-1, z), grad3d(perm[p11], x-1, y-1,z))),
+		lerp(fy, lerp(fx, grad3d(perm[p00 + 1], x, y, z-1), grad3d(perm[p10 + 1], x-1, y, z-1)),
+				 lerp(fx, grad3d(perm[p01 + 1], x, y-1, z-1), grad3d(perm[p11 + 1], x-1, y-1,z-1))));
+	};
+
+	this.noise2d = function(x, y) {
+	  var X = Math.floor(x)&255, Y = Math.floor(y)&255;
+	  x -= Math.floor(x); y -= Math.floor(y);
+	  var fx = (3-2*x)*x*x, fy = (3-2*y)*y*y;
+	  var p0 = perm[X]+Y, p1 = perm[X + 1] + Y;
+	  return lerp(fy,
+		lerp(fx, grad2d(perm[p0], x, y), grad2d(perm[p1], x-1, y)),
+		lerp(fx, grad2d(perm[p0 + 1], x, y-1), grad2d(perm[p1 + 1], x-1, y-1)));
+	};
+
+	this.noise1d = function(x) {
+	  var X = Math.floor(x)&255;
+	  x -= Math.floor(x);
+	  var fx = (3-2*x)*x*x;
+	  return lerp(fx, grad1d(perm[X], x), grad1d(perm[X+1], x-1));
+	};
+}
+
+var noiseProfile = { generator: undefined, octaves: 4, fallout: 0.5, seed: undefined};
+
+noise = function(x, y, z) {
+	if(noiseProfile.generator === undefined) {
+	  // caching
+	  noiseProfile.generator = new PerlinNoise(noiseProfile.seed);
+	}
+	var generator = noiseProfile.generator;
+	var effect = 1, k = 1, sum = 0;
+	for(var i=0; i<noiseProfile.octaves; ++i) {
+	  effect *= noiseProfile.fallout;
+	  switch (arguments.length) {
+	  case 1:
+		sum += effect * (1 + generator.noise1d(k*x))/2; break;
+	  case 2:
+		sum += effect * (1 + generator.noise2d(k*x, k*y))/2; break;
+	  case 3:
+		sum += effect * (1 + generator.noise3d(k*x, k*y, k*z))/2; break;
+	  }
+	  k *= 2;
+	}
+	return sum;
+};
+    
+  </script>
+ </head>
+ <body onload="init()">
+ 	<div class="aligncenter">
+   		<canvas id="canvas" width="800" height="600"></canvas>
+   		<div id="message">carregando a tua tia num trolley tramado...</div>
+   	</div>
+ </body>
+</html>
