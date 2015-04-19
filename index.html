@@ -20,7 +20,7 @@
 	}
 	
 	body {
-		background: black;
+		background: white;
 	}
 	
  	.aligncenter {
@@ -30,12 +30,12 @@
  		text-align: center;
  		margin: auto;
  	}
-/*	
+	
 	#message {
 		position: absolute;
 		top: 0px;
 		left: 0px;
-		font-family: 'Neuropol';
+		font-family: 'Monserrat', sans-serif;
 		color: #fff;
 		width: 100%;
 		height: 100%;
@@ -50,11 +50,11 @@
 	
 	#message span {
 		position: relative;
-		top: 35%;
+		top: 40%;
 		transform: translateY(-50%);
 		font-size:2em;
 	}
-	
+/*	
 	#message_console {
 		position: absolute;
 		bottom: 0px;
@@ -80,7 +80,7 @@ rand = function(n){
 	return Math.floor(Math.random()*n);
 };
 
-var rms = 1.0;
+var rms = 0.0;
 var is_chrome = navigator.userAgent.indexOf('Chrome') > -1;
 var is_safari = navigator.userAgent.indexOf("Safari") > -1;
 if ((is_chrome)&&(is_safari)) {is_safari=false;}
@@ -139,6 +139,8 @@ var process = function(e) {
 var w;
 var h;
 var ctx;
+var halfw;
+var halfh;
 
 map = function(value, istart, istop, ostart, ostop) {
     return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
@@ -147,151 +149,75 @@ map = function(value, istart, istop, ostart, ostop) {
 function drawCanvas() {
 
 	resize();
-	//loadLine('','');
+	loadLine('','');
 
-	var num = 10;
-	/*var angle = (Math.PI*2)/num;
-	var size = 10;
-	var opening, phase1, phase2;
-	var pad = 25;
-	var thissize = 100;*/
-	
-	var cube = [];
-
-	for(var i=0; i<num; i++) {
-		cube[i] = Cube(w*0.5, h*0.5);
-	}
-	
-	console.log(cube);
+	var num = 20;
 	
 	function drawThis() {
 		
-		//fill(0, noise(frameCount*0.01)*128);
-		//noStroke();
-		//rect(0, 0, width, height);
+		ctx.fillStyle = "rgba(55,25,255,1.0)";
+		ctx.fillRect(0,0,w,h);
 		
-		//console.log(cube);
-		//for(var i=0; i<num; i++) {
-		//	cube[i].init();
-		//}
-
 		var d2 = new Date();
 		var n2 = d2.getTime(); 
-		var fader = 0;
-
-		if ((n2-n) <= 3000) {
-		//if(millis() <= 30000) {
-			fader = map((n2-n), 30000, 0, 0.0, 1.0);
-		//} else if (millis() >= 90000) {
-		} else if ((n2-n) >= 90000) {
-			fader = map((n2-n), 90000, 120000, 0.0, 1.0);
-		}
 		
 		var frameCount = Math.floor((n2-n)*50);
+		var gray = 255;//noise(frameCount*0.2)*256;
+		ctx.lineWidth = 5*rms;
+		ctx.strokeStyle = "rgba(255,255,255,0.6)";
+		var sin1 = Math.sin((n2-n)/800)+1.0;
+		var cos1 = Math.cos((n2-n)/1600)+1.0;
+		for(var i=0; i<num; i++) {
+			var sizex = halfw - i*20*sin1;
+			var sizey = halfh - i*20*cos1;
+			ctx.save();
+			ctx.beginPath();
+			ctx.moveTo(w*.5-sizex,h*.5-sizey);
+			ctx.lineTo(w*.5-sizex,h*.5+sizey);
+			ctx.lineTo(w*.5+sizex,h*.5+sizey);
+			ctx.lineTo(w*.5+sizex,h*.5-sizey);
+			ctx.closePath();
+			ctx.stroke();
+		}
 		
 		ctx.save();
 		var rotX = map(noise(frameCount*0.001)*100, 0, 100, -90, 90);
 		var rotY = map(noise(frameCount*0.002)*100, 0, 100, -90, 90);
 		ctx.translate(w*0.5, h*0.5);
-		//textFont(font);
-		//textSize(48);
-		//textAlign(CENTER);
 		ctx.font="48px Monserrat";
-		//fill(noise(frameCount*0.2)*256, noise(frameCount*0.1)*256);
-		var gray = noise(frameCount*0.2)*256;
-		ctx.fillStyle = "rgba("+gray+","+gray+","+gray+","+noise(frameCount*0.1)+")";
-		//rotateX(radians(rotX));
-		//rotateY(radians(rotY));
+		ctx.fillStyle = "rgba("+gray+","+gray+","+gray+","+rms+")";
 		ctx.transform(1,rotX,rotY,1,0,0);
-		//text(words[(millis()/1000)%words.length].toUpperCase(), 0, 0);
 		ctx.fillText(words[Math.floor((n2-n)/1000)%words.length].toUpperCase(),0,0);
-		//popMatrix();
 		ctx.restore();
-	
-//TODO: PORT LETTERS
-		/*pushMatrix();
-		float rotX = map(noise(frameCount*0.001)*100, 0, 100, -90, 90);
-		float rotY = map(noise(frameCount*0.002)*100, 0, 100, -90, 90);
-		translate(width/2, height/2);
-		textFont(font);
-		textSize(48);
-		textAlign(CENTER);
-		fill(noise(frameCount*0.2)*256, noise(frameCount*0.1)*256);
-		rotateX(radians(rotX));
-		rotateY(radians(rotY));
-		text(words[(millis()/1000)%words.length].toUpperCase(), 0, 0);
-		popMatrix();*/
 
-		//fill(255, fader);
-		//rect(0, 0, width, height);
-		ctx.fillStyle = "rgba(255,255,255,"+fader+")";
-		ctx.fillRect(0,0,w,h);
-		
-		/*phase1 = timer/25000;
-		phase2 = timer/2500;
-		phase3 = timer/100;
-
-		ctx.fillStyle = "rgba(255,182,200,0.5)";
-		ctx.fillRect(0,0,w,h);
-		
-		var gray = parseInt((255-rms*100),10);
-		ctx.fillStyle = "rgba(250,250,250,0.1)";
-		var sizex = thissize;
-		var sizey = thissize*rms;
-		for (var thisx=0; thisx<w; thisx += sizex*2 ) {
-			for (var thisy=0; thisy<h; thisy += sizey*2 ) {
-				var posX = w - ((timer + thisx*.5 - sizex*Math.sin(thisy)) % (w + thissize));
-				var posY = h*.41 + Math.sin(phase2)*rms*10 - Math.cos(phase3 + thisx)*h*.5;
-				ctx.save();
-				ctx.translate( posX, parseInt(posY,10) );
-				ctx.beginPath();
-				ctx.moveTo(-sizex,-sizey);
-				ctx.lineTo(-sizex,sizey);
-				ctx.lineTo(sizex,sizey);
-				ctx.lineTo(sizex,-sizey);
-				ctx.closePath();
-				ctx.fill();
-				ctx.restore();
-			}
-		}	*/
-		
+		ctx.fillStyle = "rgba(255,255,255,"+rms+")";
+		ctx.fillRect(0,0,w,h);		
 	}
 	
 	requestAnimationFrame( animate );
 	
 	var d = new Date();
 	var n = d.getTime();
+	var repeater = n;
+	var rperiod = 2000;
+	var index = 0;
 
 	function animate() {
 		requestAnimationFrame( animate );
 		drawThis();
+		
+		var dom = document.getElementById('message');
+		if (dom) {
+			var d2 = new Date();
+			var n2 = d2.getTime(); 
+			if (((n2-n) > 2000) && (n2-repeater) > rperiod) {
+				repeater = n2;
+				loadLine('',words[index++]);
+				if (index >= words.length) index = 0;
+			}
+		}
 	}
 }
-
-
-function Cube(x,y) {
- 	this._x = x;
-    this._y = y;
-    this._rotX = Math.random();
-    this._rotY = Math.random();
-    this._strokeAlpha = Math.random();
-};
-
-Cube.prototype = {
-	init: {
-	
-//TODO: PORT CUBE
-		/*pushMatrix();
-		translate(_x, _y, -100);
-		rotateX(radians(frameCount * _rotX));
-		rotateY(radians(frameCount * _rotY));
-		noFill();
-		stroke(255, _strokeAlpha);
-		strokeWeight(.5);
-		box(width/1.5);
-		popMatrix();*/
-	  }
-};
 
 window.onresize = resize;
 
@@ -306,24 +232,33 @@ function resize() {
 	ctx = canvas.getContext("2d");
 	ctx.width = w;
 	ctx.height = h;
+	halfw = w*.5;
+	halfh = h*.5;
 }
 
-/*function loadLine(thisclass, thistext) {
-var content = '';
-content += '<span class="'+thisclass+'">'+thistext+'</span><br />';
-document.getElementById('message').innerHTML = content;
-}*/
+function loadLine(thisclass, thistext) {
+	var content = '';
+	content += '<span class="'+thisclass+'">'+thistext+'</span><br />';
+	document.getElementById('message').innerHTML = content;
+}
 
 var words = [
-"Scenept",
+"ScenePT",
 "Demoilta#11",
 "2 de Maio 2015",
-"16h",
+"16h00",
 "ArticaCC",
 "Campus FCT",
 "Monte da Caparica",
-"Entrada 1 Super Bock",
-"Fuckings to Lamers"
+"Edificio 6",
+"* trazer SuperBock",
+"",
+"Cumprimentos à familia",
+"",
+"não nos responsabilizamos pelo Victor",
+"",
+"nny - ps",
+"convidam-vos para:"
 ];
 
 
